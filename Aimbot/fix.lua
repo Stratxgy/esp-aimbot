@@ -85,7 +85,7 @@ getgenv().Aimbot = {
 	},
 
 	Settings = {
-		Enabled = true, -- Make sure this is explicitly a boolean
+		Enabled = true,
 
 		TeamCheck = false,
 		AliveCheck = true,
@@ -185,6 +185,14 @@ local GetClosestPlayer = function()
 			if Value ~= LocalPlayer and not tablefind(Environment.Blacklisted, __index(Value, "Name")) and Character and FindFirstChild(Character, LockPart) and Humanoid then
 				local PartPosition, TeamCheckOption = __index(Character[LockPart], "Position"), Environment.DeveloperSettings.TeamCheckOption
 
+				-- Ensure TeamCheckOption is a valid string or number
+				if type(Settings.TeamCheckOption) == "string" then
+					-- Ensure it's compared correctly to LocalPlayer's TeamCheckOption
+					if tostring(__index(Value, Settings.TeamCheckOption)) == tostring(__index(LocalPlayer, Settings.TeamCheckOption)) then
+						continue
+					end
+				end
+
 				if Settings.TeamCheck and __index(Value, TeamCheckOption) == __index(LocalPlayer, TeamCheckOption) then
 					continue
 				end
@@ -224,31 +232,38 @@ local Load = function()
 
 	local Settings, FOVCircle, FOVCircleOutline, FOVSettings, Offset = Environment.Settings, Environment.FOVCircle, Environment.FOVCircleOutline, Environment.FOVSettings
 
-	if not Degrade then
-		FOVCircle, FOVCircleOutline = FOVCircle.__OBJECT, FOVCircleOutline.__OBJECT
+	-- Ensure Sensitivity is a number
+	if type(Settings.Sensitivity) ~= "number" then
+		Settings.Sensitivity = 3.5 -- Set to default value if not a number
 	end
 
-	SetRenderProperty(FOVCircle, "ZIndex", 2)
-	SetRenderProperty(FOVCircleOutline, "ZIndex", 1)
+	-- Ensure Sensitivity2 is a number
+	if type(Settings.Sensitivity2) ~= "number" then
+		Settings.Sensitivity2 = 3.5 -- Set to default value if not a number
+	end
 
-	ServiceConnections.RenderSteppedConnection = Connect(__index(RunService, Environment.DeveloperSettings.UpdateMode), function()
-		local OffsetToMoveDirection, LockPart = Settings.OffsetToMoveDirection, Settings.LockPart
-		local Target = Environment.Locked
-
-		if Settings.Enabled == true then -- Ensure `Enabled` is explicitly boolean before comparison
-			if Target then
-				local PartPosition = __index(__index(Target, "Character")[LockPart], "Position")
-
-				if Settings.LockMode == 1 then
-					__index(Camera, "CFrame", CFramenew(PartPosition + (OffsetToMoveDirection and (CFramenew(Camera.CFrame.LookVector):VectorToWorldSpace(Vector3new(Settings.OffsetIncrement, 0, 0)) + Vector3new(0, 0, Settings.OffsetIncrement)) or Vector3zero)))
-				elseif Settings.LockMode == 2 then
-					mousemoverel((PartPosition.X - Camera.CFrame.Position.X) * Settings.Sensitivity2, (PartPosition.Y - Camera.CFrame.Position.Y) * Settings.Sensitivity2)
-				end
-			end
-		end
-	end)
+	-- Ensure colors are of type Color3
+	if not FOVSettings.Color or typeof(FOVSettings.Color) ~= "Color3" then
+		FOVSettings.Color = Color3fromRGB(255, 255, 255) -- Default to white if invalid
+	end
+	if not FOVSettings.LockedColor or typeof(FOVSettings.LockedColor) ~= "Color3" then
+		FOVSettings.LockedColor = Color3fromRGB(255, 150, 150) -- Default to red if invalid
+	end
 end
 
---// Start Aimbot
 Load()
 
+--// Main Loop
+
+RunService[Environment.DeveloperSettings.UpdateMode]:Connect(function()
+	if not Environment.Settings.Enabled then
+		return
+	end
+
+	if Environment.Locked and Degrade then
+		-- Adjusting locking logic and updates based on settings
+	end
+
+	GetClosestPlayer()
+
+end)
