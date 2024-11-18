@@ -151,8 +151,6 @@ else
 	GetRenderProperty, SetRenderProperty = RenderObjectMetatable.__index, RenderObjectMetatable.__newindex -- Must use the "__OBJECT" element for either of these functions otherwise you get a stack overflow.
 
 	TemporaryDrawing.Remove(TemporaryDrawing)
-
-	warn("ESP > Your exploit does not support this module's optimizations! The visuals might be laggy and decrease performance.")
 end
 
 --// Variables
